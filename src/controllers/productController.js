@@ -74,7 +74,6 @@ export const addProduct = async (req, res) => {
     });
   }
 };
-
 /** 
  controller for list product
  @GET :/api/product/list
@@ -99,10 +98,58 @@ export const listProducts = async (req, res) => {
  controller for remove product
  @POST :/api/product/remove 
  */
-export const removeProduct = async (req, res) => {};
+export const removeProduct = async (req, res) => {
+  try {
+    const product = await productModel.findByIdAndDelete(req.body.id);
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Product removed successfully",
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 /** 
  controller for single product info
- @POST :/api/product/single
+@GET  :/api/product/single
  */
-export const singleProduct = async (req, res) => {};
+export const singleProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await productModel.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Product fetched successfully",
+      product,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

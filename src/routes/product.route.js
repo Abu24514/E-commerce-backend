@@ -19,7 +19,7 @@ productRoutes.post(
   addProduct,
 );
 productRoutes.post("/remove", removeProduct);
-productRoutes.post("/single", singleProduct);
+productRoutes.get("/single/:id", singleProduct);
 productRoutes.get("/list", listProducts);
 
 export default productRoutes;
