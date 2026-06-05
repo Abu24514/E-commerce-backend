@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import productModel from "../models/productModel.js";
 /** 
  controller for add product
  @POST :/api/product/add'
@@ -14,7 +15,14 @@ export const addProduct = async (req, res) => {
       sizes,
       bestseller,
     } = req.body;
-
+    // Validate image upload
+    if (!req.files) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload product images",
+      });
+    }
+    // Extract uploaded images
     const image1 = req.files.image1 && req.files.image1[0];
     const image2 = req.files.image2 && req.files.image2[0];
     const image3 = req.files.image3 && req.files.image3[0];
@@ -23,27 +31,47 @@ export const addProduct = async (req, res) => {
     const images = [image1, image2, image3, image4].filter(
       (item) => item !== undefined,
     );
-    let imageUrls = await Promise.all(
-      images.map(async (item)=>{
-        let result = await cloudinary.uploader.upload(item.path, {resource_type:'image'});
-        return result.secure_url
-      })
-    )
+    // Upload images to Cloudinary
+    const imageUrls = await Promise.all(
+      images.map(async (item) => {
+        const result = await cloudinary.uploader.upload(item.path, {
+          resource_type: "image",
+        });
 
-    console.log(
+        return result.secure_url;
+      }),
+    );
+    // Create product object
+    const productData = {
       name,
       description,
-      price,
       category,
+      price: Number(price),
       subCategory,
-      sizes,
-      bestseller,
-    );
-    console.log(imageUrls);
-    res.json({});
+      bestseller: bestseller === "true",
+      sizes: JSON.parse(sizes),
+      image: imageUrls,
+      date: Date.now(),
+    };
+
+    // console.log(productData);
+
+    // Save product in database
+    const product = new productModel(productData);
+    await product.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Product added successfully",
+      product,
+    });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -51,7 +79,22 @@ export const addProduct = async (req, res) => {
  controller for list product
  @GET :/api/product/list
  */
-export const listProducts = async (req, res) => {};
+export const listProducts = async (req, res) => {
+  try {
+    const products = await productModel.find({});
+    res.status(200).json({
+      success: true,
+      message: "Products fetched successfully",
+      products,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 /** 
  controller for remove product
  @POST :/api/product/remove 

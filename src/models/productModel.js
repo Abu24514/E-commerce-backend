@@ -25,14 +25,14 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  size: {
+  sizes: {
     type: Array,
     required: true,
   },
   bestseller: {
     type: Boolean,
   },
-  data: {
+  date: {
     type: Number,
     required: true,
   }
