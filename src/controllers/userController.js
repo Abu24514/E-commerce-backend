@@ -2,7 +2,7 @@ import userModel from "../models/userModel.js";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../config/token.js";
-
+import jwt from "jsonwebtoken";
 /** 
  controller for user registration
  @POST : /api/user/register
@@ -160,11 +160,5 @@ export const logoutUser = async (req, res) => {
     });
   }
 };
-
-/** 
- controller for user login
- @POST : /api/user/login
- */
-export const adminLogin = async (req, res) => {};
 
 
