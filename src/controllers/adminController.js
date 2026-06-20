@@ -15,15 +15,9 @@ export const adminLogin = async (req, res) => {
         expiresIn: "7d",
       });
 
-      res.cookie("adminToken", token, {
-        httpOnly: true,
-        secure: false, // production me true
-        sameSite: "Lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
       return res.status(200).json({
         success: true,
+        token, 
         message: "Admin login successfully",
       });
     }
@@ -45,15 +39,26 @@ export const adminLogin = async (req, res) => {
  */
 export const adminLogout = async (req, res) => {
   try {
-    res.clearCookie("adminToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
-    });
-
     return res.status(200).json({
       success: true,
       message: "Admin logout successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/** 
+ controller for user login
+ @GET : /api/admin/check-auth
+ */
+export const checkAdminAuth = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
     });
   } catch (error) {
     return res.status(500).json({
