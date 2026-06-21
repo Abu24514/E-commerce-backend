@@ -122,6 +122,35 @@ export const removeProduct = async (req, res) => {
     });
   }
 };
+
+/** 
+ controller for remove product
+ @PATCH :/api/product/update/:id
+ */              
+export const updateProduct = async (req, res) => {
+  try {
+    const { name, category, subCategory, price } = req.body;
+
+    await productModel.findByIdAndUpdate(req.params.id, {
+      name,
+      category,
+      subCategory,
+      price,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product Update successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 /** 
  controller for single product info
 @GET  :/api/product/single

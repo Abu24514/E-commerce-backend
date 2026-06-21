@@ -161,4 +161,37 @@ export const logoutUser = async (req, res) => {
   }
 };
 
+/** 
+ controller for get current user
+ @GET : /api/user/me
+ */
+export const getMe = async (req, res) => {
+  try {
+    // cookie se userId aaya hai userAuth middleware se
+    const user = await userModel.findById(req.userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // send safe user data
+    const safeUser = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+    };
+
+    return res.status(200).json({
+      message: "User fetched successfully",
+      user: safeUser,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 
