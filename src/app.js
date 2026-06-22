@@ -5,6 +5,7 @@ import userRoutes from "./routes/user.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 const app = express();
 
 // use middleware
@@ -21,5 +22,6 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin',adminRoutes);
 app.use('/api/product',productRoutes);
 app.use('/api/cart',cartRoutes);
+app.use('/api/order', orderRoutes)
 
 export default app;
