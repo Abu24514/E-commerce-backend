@@ -1,10 +1,10 @@
 // index.js == server.js 
-import app from "./src/app.js";
 import dotenv from "dotenv/config";
+import app from "./src/app.js";
 import connectToDb from "./src/config/db.js";
 import connectCloudinary from "./src/config/cloudinary.js";
 
-const PORT =process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // Database call
 connectToDb();
