@@ -3,7 +3,8 @@ import {
   placeOrder,
   placeOrderStrip ,
   verifyStripe,
-  // placeOrderRazorpay ,
+  placeOrderRazorpay ,
+  verifyRazorpay,
   allOrders,
   userOrders,
   updateStatus,
@@ -19,10 +20,12 @@ orderRoutes.post("/status", adminAuth, updateStatus);
 
 orderRoutes.post("/place", userAuth, placeOrder);
 orderRoutes.post('/stripe',userAuth ,placeOrderStrip);
-// orderRoutes.post('/razorpay',userAuth ,placeOrderRazorpay);
+orderRoutes.post('/razorpay',userAuth ,placeOrderRazorpay);
 // user features
 orderRoutes.post("/userorders", userAuth, userOrders);
 
 // verify payment
 orderRoutes.post("/verifyStripe",userAuth, verifyStripe)
+orderRoutes.post("/verifyRazorpay",userAuth, verifyRazorpay)
+
 export default orderRoutes;

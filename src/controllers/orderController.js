@@ -1,7 +1,8 @@
+import crypto from "crypto";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import Stripe from "stripe";
-
+import Razorpay from "razorpay";
 /* Global variables */
 const origin = process.env.FRONTEND_URL;
 const currency = "INR";
@@ -10,6 +11,10 @@ const deliveryCharge = 10;
 /*  --- gateway initialize ---- */
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const razorpayInstance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 /**
  controller for Placing orders using COD Method
  @POST :/api/order/place
@@ -122,11 +127,11 @@ const verifyStripe = async (req, res) => {
       // cart clear karo order place hone ke baad
       await userModel.findByIdAndUpdate(userId, { cartData: {} });
       res.status(200).json({
-        success :true
-      })
-    }else{
-      await orderModel.findByIdAndDelete(orderId)
-      res.status(200).json({ success: false })
+        success: true,
+      });
+    } else {
+      await orderModel.findByIdAndDelete(orderId);
+      res.status(200).json({ success: false });
     }
   } catch (error) {
     console.log(error);
@@ -141,7 +146,77 @@ const verifyStripe = async (req, res) => {
   controller for Placing orders using Razorpay Method
   @POST :/api/order/razorpay
  */
-// const placeOrderRazorpay = async (req, res) => {};
+const placeOrderRazorpay = async (req, res) => {
+  try {
+    const { items, amount, address } = req.body;
+    const userId = req.userId;
+
+    const newOrder = await orderModel.create({
+      userId,
+      items,
+      amount,
+      address,
+      status: "Order Placed",
+      paymentMethod: "Razorpay",
+      payment: false,
+      date: Date.now(),
+    });
+
+    const options = {
+      amount: amount * 100,
+      currency: currency,
+      receipt: newOrder._id.toString(),
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+
+    return res.status(201).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+  controller for verify Razorpay Payment
+  @POST :/api/order/verifyRazorpay
+ */
+const verifyRazorpay = async (req, res) => {
+  const { razorpayOrderId, razorpayPaymentId, signature } = req.body;
+  const userId = req.userId;
+
+  try {
+    // signature verify ...
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpayOrderId + "|" + razorpayPaymentId)
+      .digest("hex");
+
+    if (generatedSignature === signature) {
+      const order = await razorpayInstance.orders.fetch(razorpayOrderId);
+      await orderModel.findByIdAndUpdate(order.receipt, { payment: true });
+      await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+      return res.status(200).json({ success: true });
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Payment verification failed" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 /**
  controller for All Orders -- Admin Panel
@@ -209,7 +284,8 @@ export {
   placeOrder,
   placeOrderStrip,
   verifyStripe,
-  // placeOrderRazorpay,
+  placeOrderRazorpay,
+  verifyRazorpay,
   allOrders,
   userOrders,
   updateStatus,
