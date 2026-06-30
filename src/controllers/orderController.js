@@ -101,7 +101,7 @@ const placeOrderStrip = async (req, res) => {
       mode: "payment",
     });
 
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
       session_url: session.url,
     });
