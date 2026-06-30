@@ -10,8 +10,13 @@ export const addToCart = async (req, res) => {
     const userId = req.userId; // userAuth middleware se aayega
 
     const user = await userModel.findById(userId);
-    let cartData = user.cartData;
 
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    let cartData = user.cartData;
 
     if (cartData[itemId]) {
       if (cartData[itemId][size]) {
@@ -48,6 +53,12 @@ export const updateCart = async (req, res) => {
     const userId = req.userId;
 
     const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
     let cartData = user.cartData;
 
     if (quantity === 0) {
@@ -80,6 +91,12 @@ export const getUserCart = async (req, res) => {
     const userId = req.userId;
 
     const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
 
     return res.status(200).json({
       success: true,
