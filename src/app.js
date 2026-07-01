@@ -8,6 +8,7 @@ import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import newsletterRoutes from "./routes/newsletter.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 const app = express();
 
 // use middleware
@@ -27,6 +28,7 @@ app.use('/api/cart',cartRoutes);
 app.use('/api/order', orderRoutes)
 app.use('/api/contact', contactRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/ai', aiRoutes)
 
 
 export default app;
