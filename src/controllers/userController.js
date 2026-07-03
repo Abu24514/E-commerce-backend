@@ -58,8 +58,8 @@ export const registerUser = async (req, res) => {
     // store token in cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production
-      sameSite: "Lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -115,8 +115,8 @@ export const loginUser = async (req, res) => {
     // store token in cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production
-      sameSite: "Lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -148,8 +148,8 @@ export const logoutUser = async (req, res) => {
     // clear token cookie
     res.clearCookie("token", {
       httpOnly: true,
-      secure: false, // true in production
-      sameSite: "Lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     });
 
     return res.status(200).json({
@@ -396,7 +396,7 @@ export const resetPassword = async (req, res) => {
         message: "New password is required",
       });
     }
-    
+
     if (validator.isEmpty(newPassword.trim())) {
       return res.status(400).json({
         success: false,
