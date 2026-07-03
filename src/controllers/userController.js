@@ -3,6 +3,7 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../config/token.js";
 import jwt from "jsonwebtoken";
+import transporter from "../config/mailer.js";
 /** 
  controller for user registration
  @POST : /api/user/register
@@ -298,6 +299,168 @@ export const changePassword = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: `changePassword error: ${error.message}`,
+    });
+  }
+};
+
+/**
+ * controller for forgot-password
+ * @POST : /api/user/forgot-password
+ */
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email",
+      });
+    }
+    const user = await userModel.findOne({
+      email: email.trim().toLowerCase(),
+    });
+
+    // Security reason
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message:
+          "If an account exists with this email, a reset link has been sent.",
+      });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Reset Your Wearly Password",
+      html: `
+        <h2>Password Reset</h2>
+
+        <p>You requested a password reset.</p>
+
+        <a href="${resetLink}">
+          Reset Password
+        </a>
+
+        <p>This link will expire in 15 minutes.</p>
+
+        <p>If you didn't request this, ignore this email.</p>
+      `,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link sent successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * controller for resetPassword
+ * @POST : /api/user/reset-password/:token
+ */
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const { token } = req.params;
+
+    if (!newPassword?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "New password is required",
+      });
+    }
+    
+    if (validator.isEmpty(newPassword.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Password cannot be empty",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await userModel
+      .findOne({
+        _id: decoded.id,
+        resetPasswordToken: token,
+      })
+      .select("+password");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid reset link",
+      });
+    }
+
+    if (!user.resetPasswordExpire || user.resetPasswordExpire < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "Reset link has expired",
+      });
+    }
+
+    // Check if new password is same as current password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+
+    if (isSamePassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password cannot be the same as the old password",
+      });
+    }
+
+    // Hash new password
+    user.password = await bcrypt.hash(newPassword, 10);
+
+    // Clear reset token
+    user.resetPasswordToken = "";
+    user.resetPasswordExpire = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully. Please login.",
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired reset link",
     });
   }
 };

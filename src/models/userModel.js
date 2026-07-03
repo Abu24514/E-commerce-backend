@@ -20,6 +20,14 @@ const useSchema = new mongoose.Schema(
       type: Object,
       default: {},
     },
+    resetPasswordToken: {
+      type: String,
+      default: "",
+    },
+    resetPasswordExpire: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true, minimize: false },
 );
