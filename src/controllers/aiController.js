@@ -25,7 +25,7 @@ export const chatWithAI = async (req, res) => {
       usage = await UsageModel.findOneAndUpdate(
         { userId },
         { userId, count: 0, date: now, lastRequestAt: 0 },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
     }
 
