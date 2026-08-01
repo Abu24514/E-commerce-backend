@@ -74,13 +74,17 @@ export const addProduct = async (req, res) => {
     });
   }
 };
-/** 
+/*
  controller for list product
  @GET :/api/product/list
  */
 export const listProducts = async (req, res) => {
   try {
-    const products = await productModel.find({});
+    const products = await productModel
+      .find({})
+      .select("name price image category subCategory bestseller sizes createdAt")
+      .lean();
+
     res.status(200).json({
       success: true,
       message: "Products fetched successfully",
